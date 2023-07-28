@@ -6,3 +6,9 @@ csp_experiments
 .DS_Store
 
 experiments/
+experiment/
+csp_investigations/
+
+run_job_on_cluster.sh
+
+used_modes.json
