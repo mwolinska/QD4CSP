@@ -21,7 +21,7 @@ from csp_elites.parallel_relaxation.fire import OverridenFire
 class AtomsFilterForRelaxation:
     def __init__(self, scalar_pressure: float = 0):
         self.scalar_pressure = scalar_pressure
-        self.model = CHGNet.load()
+        # self.model = CHGNet.load()
 
     @staticmethod
     def deform_grad(
@@ -67,15 +67,14 @@ class AtomsFilterForRelaxation:
     ):
         natoms = len(atoms_to_update[0])
         updated_positions = new_atoms_positions.copy()
-        updated_positions[:, natoms:] = np.array([expm(updated_positions[i, natoms:, :]) for i in range(len(updated_positions))])
+        updated_positions[:, natoms:, :] = np.array([expm(updated_positions[i, natoms:, :]) for i in range(len(updated_positions))])
         updated_atoms = self._set_positions_unit_cell_filter(
             original_cells,
             atoms_to_update,
-            new_atoms_positions,
+            updated_positions,
             cell_factors,
         )
         return updated_atoms
-
 
     def _set_positions_unit_cell_filter(
         self,
@@ -86,13 +85,13 @@ class AtomsFilterForRelaxation:
             # **kwargs?
     ):
         natoms = np.array(atoms_to_update).shape
-        new_atom_positions = new_atoms_positions[:, :natoms[1], :]
+        new_atom_positions_updated = new_atoms_positions[:, :natoms[1], :]
         new_deform_grad = new_atoms_positions[:, natoms[1]:, :] / cell_factors.reshape((-1, 1, 1))
 
         # todo copy and create new list for updated atoms and delte teh one you pass?
         for i in range(len(atoms_to_update)):
             atoms_to_update[i].set_cell(original_cells[i] @ new_deform_grad[i].T, scale_atoms=True)
-            atoms_to_update[i].set_positions(new_atom_positions[i] @ new_deform_grad[i].T) #, **kwargs)
+            atoms_to_update[i].set_positions(new_atom_positions_updated[i] @ new_deform_grad[i].T) #, **kwargs)
 
         return atoms_to_update
 
@@ -100,18 +99,18 @@ class AtomsFilterForRelaxation:
         # NB get potential energy has two methods depending ion value of force_consistent  - in CHGNET it point to the same value
         return energies + self.scalar_pressure * np.array([atoms.get_volume() for atoms in list_of_atoms])
 
-    def _evaluate_list_of_atoms(self, list_of_structures: List[Structure]):
-        # list_of_structures = [AseAtomsAdaptor.get_structure(atoms) for atoms in list_of_atoms]
-
-        predictions = self.model.predict_structure(list_of_structures,
-                                                   batch_size=len(list_of_structures))
-        if isinstance(predictions, dict):
-            predictions = [predictions]
-
-        forces = np.array([pred["f"] for pred in predictions])
-        energies = np.array([pred["e"] for pred in predictions])
-        stresses = np.array([pred["s"] for pred in predictions])
-        return forces, energies, stresses
+    # def _evaluate_list_of_atoms(self, list_of_structures: List[Structure]):
+    #     # list_of_structures = [AseAtomsAdaptor.get_structure(atoms) for atoms in list_of_atoms]
+    #
+    #     predictions = self.model.predict_structure(list_of_structures,
+    #                                                batch_size=len(list_of_structures))
+    #     if isinstance(predictions, dict):
+    #         predictions = [predictions]
+    #
+    #     forces = np.array([pred["f"] for pred in predictions])
+    #     energies = np.array([pred["e"] for pred in predictions])
+    #     stresses = np.array([pred["s"] for pred in predictions])
+    #     return forces, energies, stresses
 
     def get_forces_exp_cell_filter(
         self,
@@ -200,7 +199,7 @@ class AtomsFilterForRelaxation:
         current_atom_cells: List[Cell],
         cell_factors: np.ndarray,
     ):
-        stress = self._process_stress_like_ase_atoms(stresses_from_chgnet)
+        stress = self._process_stress_like_ase_atoms(stresses_from_chgnet * 1 / 160.21766208)
 
         volumes = np.array([atoms.get_volume() for atoms in list_of_atoms])
         virial = -volumes.reshape((-1, 1, 1)) * (voigt_6_to_full_3x3_stress(stress) +
@@ -235,7 +234,7 @@ class AtomsFilterForRelaxation:
 
     def _process_stress_like_ase_atoms(self, stresses: np.ndarray):
         """NB ase method also ddifferentiates between voigt = true / false, in teis implementation we only implement the default"""
-        return full_3x3_to_voigt_6_stress(stress_matrix=stresses) * 1 / 160.21766208
+        return full_3x3_to_voigt_6_stress(stress_matrix=stresses* 1 / 160.21766208)
 
 
 

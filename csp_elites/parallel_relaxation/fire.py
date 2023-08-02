@@ -5,8 +5,8 @@ from typing import Tuple, List
 
 import numpy as np
 from ase import Atoms
+from ase.optimize import FIRE
 from ase.optimize.optimize import Optimizer
-
 
 class OverridenFire:
     def __init__(self, atoms=None, restart=None, logfile='-', trajectory=None,
@@ -58,55 +58,70 @@ class OverridenFire:
         Nsteps: np.ndarray,
         a: np.ndarray,
     ):
-        # atoms = self.atoms
-
-        # if f is None:
-        #     f = atoms.get_forces()
 
         if v is None:
             v = np.zeros((len(f), len(f[0]), 3))
-            # if downhill_check:
-            #     e_last = atoms.get_potential_energy(
-            #         force_consistent=force_consistent)
-            #     r_last = atoms.get_positions().copy()
-            #     v_last = v.copy()
+
         else:
             is_uphill = False
-            # if downhill_check:
-                # e = atoms.get_potential_energy(
-                #     force_consistent=force_consistent)
-                # # Check if the energy actually decreased
-                # if e > e_last:
-                #     # If not, reset to old positions...
-                #     if position_reset_callback is not None:
-                #         position_reset_callback(atoms, r_last, e,
-                #                                      e_last)
-                #     atoms.set_positions(r_last)
-                #     is_uphill = True
-                # e_last = atoms.get_potential_energy(
-                #     force_consistent=force_consistent)
-                # r_last = atoms.get_positions().copy()
-                # v_last = v.copy()
 
-            vf = np.vdot(f, v)
-            if vf > 0.0 and not is_uphill:
-                v = (1.0 - a) * v + a * f / np.sqrt(
-                    np.vdot(f, f)) * np.sqrt(np.vdot(v, v))
-                if Nsteps > self.Nmin:
-                    dt = min(dt * self.finc, self.dtmax)
-                    a *= self.fa
-                Nsteps += 1
-            else:
-                v[:] *= 0.0
-                a = self.astart
-                dt *= self.fdec
-                Nsteps = 0
+            # vf = np.vdot(f, v)
+            print(f[1].sum())
+            f_reshaped = f.reshape(len(f), -1)
+            v_reshaped = v.reshape(len(v), -1)
+            vf = np.diag(f_reshaped @ v_reshaped.T)
 
-        v += dt * f
-        dr = dt * v
-        normdr = np.sqrt(np.vdot(dr, dr))
-        if normdr > self.maxstep:
-            dr = self.maxstep * dr / normdr
+            vf_positive_mask = np.array(vf > 0.0, dtype=int).reshape((-1, 1, 1))
+            vf_negative_mask = np.array(vf <= 0.0, dtype=int).reshape((-1, 1, 1))
+            # update v
+
+            vdot_ff = np.diag(f.reshape(len(f), -1) @ f.reshape(len(f), -1).T)
+            vdot_vv = np.diag(v.reshape(len(f), -1) @ v.reshape(len(f), -1).T)
+            v_positive = (1.0 - a).reshape((-1, 1, 1)) * (
+                        v * vf_positive_mask) + a.reshape((-1, 1, 1)) * (
+                                     f * vf_positive_mask) / np.sqrt(
+                vdot_ff).reshape(-1, 1, 1) * np.sqrt(vdot_vv).reshape((-1, 1, 1))
+            v_negative = v * vf_negative_mask * 0
+            v = v_positive + v_negative
+
+            Nsteps_bigger_than_n_min = np.array(Nsteps > self.Nmin, dtype=int)
+            Nsteps_smaller_than_n_min = np.array(Nsteps <= self.Nmin, dtype=int)
+            dt_1 = np.min(np.vstack([dt * vf_positive_mask.reshape(-1) * Nsteps_bigger_than_n_min * self.finc, [self.dtmax] * len(f)]), axis=0)
+            # dt[vf_negative_mask.reshape(-1).astype(bool)] *= self.fdec
+            dt_1b = dt * vf_positive_mask.reshape(-1) * Nsteps_smaller_than_n_min
+            dt_2 = dt * vf_negative_mask.reshape(-1) * self.fdec
+            dt = dt_1 + dt_1b + dt_2
+
+            Nsteps[vf_positive_mask.reshape(-1).astype(bool)] += 1
+            Nsteps_1 = Nsteps * vf_positive_mask.reshape(-1)
+            Nsteps_2 = Nsteps * vf_negative_mask.reshape(-1) * 0
+            Nsteps = Nsteps_1 + Nsteps_2
+
+            # update a
+            a_1 = a * vf_positive_mask.reshape(-1) * Nsteps_bigger_than_n_min * self.fa
+            a_2 = a * vf_positive_mask.reshape(-1)
+            a_3 = a * 0 + self.astart
+            a = a_1 + a_2 + a_3
+            # vf positive AND NSteps > NMIN
+
+            # vf positive AND NSteps <= NMIN
+
+        v += dt.reshape((-1, 1, 1)) * f
+        dr = dt.reshape((-1, 1, 1)) * v
+        # normdr = np.sqrt(np.vdot(dr, dr))
+        normdr = np.sqrt(np.diag(dr.reshape(len(dr), -1) @ dr.reshape(len(dr), -1).T))
+
+        update_dr_mask_positive = np.array(normdr > self.maxstep, dtype=int)
+        update_dr_mask_negative = np.array(normdr <= self.maxstep, dtype=int)
+        dr_1 = dr * update_dr_mask_negative.reshape((-1, 1, 1))
+        if 0 in normdr:
+            dr_2 = dr * update_dr_mask_positive.reshape((-1, 1, 1)) * self.maxstep
+        else:
+            dr_2 = dr * update_dr_mask_positive.reshape((-1, 1, 1)) * self.maxstep  / normdr.reshape((-1, 1, 1))
+        dr = dr_1 + dr_2
+
+        # if normdr > self.maxstep:
+        #     dr = self.maxstep * dr / normdr
 
         return v, e_last, r_last, v_last, dt, Nsteps, a, dr
 
@@ -164,28 +179,6 @@ class OverridenFire:
         atoms.set_position(r + dr)
         self.dump((self.v, self.dt))
 
-    def converged(self, forces):
+    def converged(self, forces, fmax):
         """Did the optimization converge?"""
-        return np.max((forces ** 2).sum(axis=2), axis=1)  < self.fmax ** 2
-
-    def irun(self, list_of_atoms: List[Atoms]):
-        converged_atoms = []
-        forces, _, _ = None, None, None
-
-        # run the algorithm until converged or max_steps reached
-        while not self.converged(forces) and self.nsteps < self.max_steps:
-
-            # compute the next step
-            self.step()
-            self.nsteps += 1
-
-            # let the user inspect the step and change things before logging
-            # and predicting the next step
-            yield False
-
-            # log the step
-            self.log()
-            self.call_observers()
-
-        # finally check if algorithm was converged
-        yield self.converged(forces)
+        return np.max((forces ** 2).sum(axis=2), axis=1) < 0.2 ** 2
