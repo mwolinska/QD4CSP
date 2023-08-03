@@ -68,7 +68,8 @@ class CrystalEvaluator:
                 fitness = - (np.abs(fmax) - self.fmax_threshold)
             else:
                 fitness = float(-atoms.get_potential_energy())
-
+        else:
+            fitness = float(-atoms.get_potential_energy())
         return fitness, relaxation_results
 
 
