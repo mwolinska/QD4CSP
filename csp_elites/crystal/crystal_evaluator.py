@@ -44,7 +44,7 @@ class CrystalEvaluator:
             MaterialProperties.SHEAR_MODULUS: self.compute_shear_modulus
         }
         self.model = CHGNet.load()
-        self.fmax_threshold = 0.1
+        self.fmax_threshold = 0.2
         self.with_force_threshold= with_force_threshold
         self.element_to_number_map = {
             "Ti": 22,
@@ -62,7 +62,14 @@ class CrystalEvaluator:
         stresses = relaxation_results["trajectory"].stresses[-1]
         self._finalize_atoms(atoms, energy=energy, forces=forces, stress=stresses)
 
-        return float(-atoms.get_potential_energy()), relaxation_results
+        if self.with_force_threshold:
+            fmax = self.compute_fmax(np.array([forces]))
+            if fmax > self.fmax_threshold:
+                fitness = - (np.abs(fmax) - self.fmax_threshold)
+            else:
+                fitness = float(-atoms.get_potential_energy())
+
+        return fitness, relaxation_results
 
 
     def _threshold_forces_on_atoms(self, forces: np.ndarray):
@@ -132,7 +139,7 @@ class CrystalEvaluator:
         return float(self.formation_energy_calculator.predict_structure(relaxed_structure))
 
     def _finalize_atoms(self, atoms, energy=None, forces=None, stress=None):
-        # atoms.wrap() # todo: what does atoms.wrap() do? Why does it not work with M3gnet
+        # atoms.wrap() # todo: what does atoms.wrap() do? Why does it not work with M3gnetx
         calc = SinglePointCalculator(atoms, energy=energy, forces=forces,
                                      stress=stress)
         atoms.calc = calc
@@ -338,8 +345,7 @@ class CrystalEvaluator:
             forces_above_threshold = -1 * np.abs(fmax[fmax > self.fmax_threshold] - 0.1)
             np.put(fitnesses, indices_above_threshold, forces_above_threshold)
 
-
-        return -1 * energies, reformated_output
+        return fitnesses, reformated_output
 
     def _evaluate_list_of_atoms(self, list_of_structures: List[Structure]):
         # list_of_structures = [AseAtomsAdaptor.get_structure(atoms) for atoms in list_of_atoms]
@@ -372,6 +378,13 @@ class CrystalEvaluator:
 
     def compute_fmax(self, forces: np.ndarray):
         return np.max((forces ** 2).sum(axis=2), axis=1) ** 0.5
+
+
+    def compute_structure_density(self, list_of_structures: List[Structure]):
+        density_list = []
+        for i in range(len(list_of_structures)):
+            density_list.append(list_of_structures[i].density)
+        return density_list
 
 def compute_composition_test(element_blocks: List[List[int]]):
     element_blocks = np.array(element_blocks)
