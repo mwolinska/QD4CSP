@@ -97,6 +97,9 @@ if __name__ == '__main__':
     print(f"atoms 2 parameters {atoms_2.get_cell_lengths_and_angles()}")
 
     list_of_atoms = [copy.deepcopy(atoms_2),
+                     copy.deepcopy(atoms_2),
+                     copy.deepcopy(atoms_2),
+                     copy.deepcopy(atoms_2),
                      ]
 
    #  # list_of_atoms = 10 * list_of_atoms
@@ -137,6 +140,7 @@ if __name__ == '__main__':
 
         v, e_last, r_last, v_last, dt, Nsteps, a, dr = \
             overriden_fire.step_override(system_size, f, e, v, e_last, r_last, v_last, dt, Nsteps, a)
+        forces, energies, stresses = evaluate_list_of_atoms(list_of_atoms, chgnet)
         # v, e_last, r_last, v_last, dt, Nsteps, a, dr = \
         #     overriden_fire.step_override(system_size, f, e, v, e_last, r_last, v_last, dt, Nsteps, a)
 
