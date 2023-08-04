@@ -23,6 +23,7 @@ class MultiprocessOptimizer:
         self.overriden_optimizer = OverridenFire()
         self.atoms_filter = AtomsFilterForRelaxation()
         self.model = CHGNet.load()
+        self.model.graph_converter.atom_graph_cutoff = 6
 
     def relax(self, list_of_atoms: List[Atoms], n_relaxation_steps: int, verbose: bool = False):
 
@@ -132,7 +133,7 @@ class MultiprocessOptimizer:
 
 if __name__ == '__main__':
 
-    optimizer = MultiprocessOptimizer(CHGNet.load())
+    optimizer = MultiprocessOptimizer()
 
     # optimizer_ref = StructOptimizer()
     # optimizer.relax(atoms_for_ref, fmax=0.1, steps=10)
@@ -146,13 +147,13 @@ if __name__ == '__main__':
     # atoms_2_copy.calc = CHGNetCalculator()
 
 
-    n_relax_steps = 2
+    n_relax_steps = 100
     # optimizer_ref.relax(atoms_2_copy, fmax=0.2, steps=n_relax_steps)
     tic = time.time()
-    relax_results, atoms_returned = optimizer.relax([atoms_to_test, atoms_2], n_relaxation_steps=n_relax_steps)
+    relax_results, atoms_returned = optimizer.relax([atoms_to_test], n_relaxation_steps=n_relax_steps, verbose=True)
     print(time.time() - tic)
-
-    tic = time.time()
-    predictions = optimizer.model.predict_structure([AseAtomsAdaptor.get_structure(atoms_to_test), AseAtomsAdaptor.get_structure(atoms_2)])
-    print(time.time() - tic)
-    print()
+    #
+    # tic = time.time()
+    # predictions = optimizer.model.predict_structure([AseAtomsAdaptor.get_structure(atoms_to_test), AseAtomsAdaptor.get_structure(atoms_2)])
+    # print(time.time() - tic)
+    # print()
