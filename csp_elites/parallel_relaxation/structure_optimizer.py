@@ -15,7 +15,7 @@ from pymatgen.core import Structure
 from pymatgen.io.ase import AseAtomsAdaptor
 
 from csp_elites.parallel_relaxation.fire import OverridenFire
-from csp_elites.parallel_relaxation.overloaded_chgnet import OverloadCHGnet
+# from csp_elites.parallel_relaxation.overloaded_chgnet import OverloadCHGnet
 from csp_elites.parallel_relaxation.structure_to_use import atoms_to_test
 from csp_elites.parallel_relaxation.unit_cell_filter import AtomsFilterForRelaxation
 
