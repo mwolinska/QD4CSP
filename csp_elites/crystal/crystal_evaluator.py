@@ -30,7 +30,8 @@ class CrystalEvaluator:
     def __init__(self,
                  comparator: OFPComparator = None,
                  with_force_threshold=True,
-                 constrained_qd=False
+                 constrained_qd=False,
+                 relax_every_n_generations=0,
                  ):
 
         self.relaxer = MultiprocessOptimizer()
@@ -40,6 +41,7 @@ class CrystalEvaluator:
         self.fmax_threshold = 0.2
         self.with_force_threshold = with_force_threshold
         self.constrained_qd = constrained_qd
+        self.relax_every_n_generations = relax_every_n_generations
 
     def compute_band_gap(self, relaxed_structure, bandgap_type: Optional[
         BandGapEnum] = BandGapEnum.SCAN):

@@ -9,12 +9,14 @@ import numpy as np
 from ase import Atoms
 # from chgnet.graph import CrystalGraphConverter
 from chgnet.model import CHGNet
-from chgnet.model.dynamics import TrajectoryObserver # CHGNetCalculator, StructOptimizer
+from chgnet.model.dynamics import TrajectoryObserver, \
+    StructOptimizer, CHGNetCalculator  # CHGNetCalculator, StructOptimizer
 from mp_api.client import MPRester
 from pymatgen.core import Structure
 from pymatgen.io.ase import AseAtomsAdaptor
 
 from csp_elites.parallel_relaxation.fire import OverridenFire
+from csp_elites.parallel_relaxation.overloaded_chgnet import OverloadCHGnet
 # from csp_elites.parallel_relaxation.overloaded_chgnet import OverloadCHGnet
 # from csp_elites.parallel_relaxation.structure_to_use import atoms_to_test
 from csp_elites.parallel_relaxation.unit_cell_filter import AtomsFilterForRelaxation
@@ -24,9 +26,9 @@ class MultiprocessOptimizer:
     def __init__(self, batch_size=10):
         self.overriden_optimizer = OverridenFire()
         self.atoms_filter = AtomsFilterForRelaxation()
-        self.model = CHGNet.load()
+        # self.model = CHGNet.load()
+        self.model = OverloadCHGnet()
         self.batch_size = batch_size
-        # self.model.graph_converter.atom_graph_cutoff = 6
 
     # GraphConverter()
     #
@@ -143,7 +145,7 @@ class MultiprocessOptimizer:
         elif isinstance(list_of_atoms[0], Structure):
             list_of_structures = list_of_atoms
 
-        predictions = self.model.predict_structure(list_of_structures, batch_size=10)
+        predictions = self.model.predict_structure_marta(list_of_structures, batch_size=10)
         if isinstance(predictions, dict):
             predictions = [predictions]
 

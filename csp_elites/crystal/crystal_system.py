@@ -12,6 +12,7 @@ from pymatgen.io.ase import AseAtomsAdaptor
 from pyxtal import pyxtal
 
 from csp_elites.crystal.materials_data_model import StartGenerators
+from csp_elites.parallel_relaxation.force_mutation import GradientMutation
 
 
 # from jax import jit
@@ -45,6 +46,7 @@ class CrystalSystem:
         self._cut_and_splice = None
         self._soft_mutation = None
         self._permutation_mutation = None
+        self._gradient_mutation = None
         self.operators = self._initialise_operators(operator_probabilities)
         self.compound_formula = compound_formula
         self._possible_pyxtal_modes =  [
@@ -116,6 +118,8 @@ class CrystalSystem:
         )
 
         self._permutation_mutation = PermutationMutation(len(self.atom_numbers_to_optimise))
+
+        self._gradient_mutation = GradientMutation
         return OperationSelector(
             operator_probabilities,
             [self._cut_and_splice, self._soft_mutation, self._strain_mutation, self._permutation_mutation],

@@ -94,6 +94,8 @@ class CVT:
         # main loop
         configuration_counter = 0
 
+        relax_every_n_generations = run_parameters["relax_every_n_generations"] if "relax_every_n_generations" in run_parameters.keys() else 0
+        generation_counter = 0
         rambar = tqdm(total=100, desc='ram%', position=0)
         rambar.n = psutil.virtual_memory().percent
         rambar.refresh()
@@ -103,6 +105,7 @@ class CVT:
         pbar = tqdm(desc="Number of evaluations", total=maximum_evaluations, position=2)
         while (n_evals < maximum_evaluations):  ### NUMBER OF GENERATIONS
             ram_logging.append(psutil.virtual_memory()[3]/1000000000)
+            generation_counter += 1
             # random initialization
             population = []
             if len(archive) <= run_parameters['random_init'] * number_of_niches:
@@ -138,13 +141,22 @@ class CVT:
                         z = z.todict()
                         population += [z]
 
+            if relax_every_n_generations != 0:
+                if generation_counter % relax_every_n_generations == 0:
+                    n_relaxation_steps = 100
+                else:
+                    n_relaxation_steps = run_parameters["number_of_relaxation_steps"]
+            else:
+                n_relaxation_steps = run_parameters["number_of_relaxation_steps"]
+
+            print(n_relaxation_steps)
 
             population_as_atoms, population, fitness_scores, descriptors, kill_list = self.crystal_evaluator.batch_compute_fitness_and_bd(
                 list_of_atoms=population,
                 cellbounds=self.crystal_system.cellbounds,
                 really_relax=None,
                 behavioral_descriptor_names=run_parameters["behavioural_descriptors"],
-                n_relaxation_steps=run_parameters["number_of_relaxation_steps"]
+                n_relaxation_steps=n_relaxation_steps
             )
             if population is not None:
                 self.crystal_system.update_operator_scaling_volumes(population=population_as_atoms)
