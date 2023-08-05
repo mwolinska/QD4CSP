@@ -38,11 +38,11 @@ if __name__ == '__main__':
 
     fitnesses, centroids, descriptors, individuals = load_archive_from_pickle(archive_filename)
 
-    # timing_batches_end = np.array([1, 6, 16, 66, 166])
-    # timing_batches_start = np.array([0, 1, 6, 16, 66])
+    timing_batches_end = np.array([1, 6, 16, 66, 166])
+    timing_batches_start = np.array([0, 1, 6, 16, 66])
 
-    timing_batches_end = np.array([1, 3, 6,])
-    timing_batches_start = np.array([0, 1, 3,])
+    # timing_batches_end = np.array([1, 3, 6,])
+    # timing_batches_start = np.array([0, 1, 3,])
 
     relaxed_archive = []
     energies = []
