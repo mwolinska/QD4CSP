@@ -12,6 +12,7 @@ from ase.ga.ofp_comparator import OFPComparator
 from csp_elites.crystal.crystal_evaluator import CrystalEvaluator
 from csp_elites.crystal.crystal_system import CrystalSystem
 from csp_elites.crystal.materials_data_model import MaterialProperties
+from csp_elites.crystal.symmetry_evaluator import SymmetryEvaluation
 from csp_elites.map_elites.cvt_csp import CVT
 from csp_elites.utils.asign_target_values_to_centroids import \
     compute_centroids_for_target_solutions, reassign_data_from_pkl_to_new_centroids
@@ -43,6 +44,8 @@ def main(experiment_parameters: ExperimentParameters):
     experiment_label = \
         f"{current_time_label}_{experiment_parameters.system_name}_{experiment_parameters.experiment_tag}"
 
+
+
     crystal_system = CrystalSystem(
         atom_numbers_to_optimise=experiment_parameters.blocks,
         volume=experiment_parameters.volume,
@@ -58,8 +61,13 @@ def main(experiment_parameters: ExperimentParameters):
                                recalculate=False)
 
     force_threshold = experiment_parameters.cvt_run_parameters["force_threshold"] if "force_threshold" in experiment_parameters.cvt_run_parameters.keys() else False
+    constrained_qd = experiment_parameters.cvt_run_parameters["constrained_qd"] if "constrained_qd" in experiment_parameters.cvt_run_parameters.keys() else False
 
-    crystal_evaluator = CrystalEvaluator(comparator=comparator, with_force_threshold=force_threshold)
+    crystal_evaluator = CrystalEvaluator(
+        comparator=comparator,
+        with_force_threshold=force_threshold,
+        constrained_qd=constrained_qd,
+    )
 
     cvt = CVT(
         number_of_bd_dimensions=experiment_parameters.n_behavioural_descriptor_dimensions,
@@ -99,49 +107,55 @@ def main(experiment_parameters: ExperimentParameters):
     # plot_fitness_from_file(fitness_plotting_filename)
 
     # ToDo: Pass target centroids in better
-    if MaterialProperties.ENERGY_FORMATION in experiment_parameters.cvt_run_parameters["behavioural_descriptors"]:
-        comparison_data = str(pathlib.Path(
-            experiment_directory_path).parent.parent / "experiments/target_data/tio2_target_data.pkl")
-        target_centroids = compute_centroids_for_target_solutions(
-            centroids_file=centroid_filename,
-            target_data_file=comparison_data,
-            filter_for_number_of_atoms=experiment_parameters.fitler_comparison_data_for_n_atoms
-        )
-    else:
-        comparison_data = str(pathlib.Path(
-            experiment_directory_path).parent.parent / "experiments/target_data/ti02_band_gap_shear_modulus.pkl")
-        comparison_data_packed = load_archive_from_pickle(comparison_data)
-        target_centroids = reassign_data_from_pkl_to_new_centroids(
-            centroids_file=centroid_filename,
-            target_data=comparison_data_packed,
-            filter_for_number_of_atoms=experiment_parameters.fitler_comparison_data_for_n_atoms
-        )
+    # if MaterialProperties.ENERGY_FORMATION in experiment_parameters.cvt_run_parameters["behavioural_descriptors"]:
+    #     comparison_data = str(pathlib.Path(
+    #         experiment_directory_path).parent.parent / "experiments/target_data/tio2_target_data.pkl")
+    #     target_centroids = compute_centroids_for_target_solutions(
+    #         centroids_file=centroid_filename,
+    #         target_data_file=comparison_data,
+    #         filter_for_number_of_atoms=experiment_parameters.fitler_comparison_data_for_n_atoms
+    #     )
+    # else:
+    #     comparison_data = str(pathlib.Path(
+    #         experiment_directory_path).parent.parent / "experiments/target_data/ti02_band_gap_shear_modulus.pkl")
+    #     comparison_data_packed = load_archive_from_pickle(comparison_data)
+    #     target_centroids = reassign_data_from_pkl_to_new_centroids(
+    #         centroids_file=centroid_filename,
+    #         target_data=comparison_data_packed,
+    #         filter_for_number_of_atoms=experiment_parameters.fitler_comparison_data_for_n_atoms
+    #     )
+    #
+    # structure_info, known_structures = get_all_materials_with_formula(experiment_parameters.system_name)
+    #
+    # structures_for_comparison ={}
+    # for i, structure in enumerate(known_structures):
+    #     if len(structure.get_atomic_numbers()) == experiment_parameters.fitler_comparison_data_for_n_atoms:
+    #         structures_for_comparison[str(structure_info[i].material_id)] = structure
+    #
+    # plot_all_maps_in_archive(
+    #     experiment_directory_path=experiment_directory_path,
+    #     experiment_parameters=experiment_parameters,
+    #     all_centroids=all_centroids,
+    #     target_centroids=target_centroids,
+    # )
+    #
+    # plot_all_statistics_from_file(
+    #     filename=f"{experiment_directory_path}/{experiment_label}.dat",
+    #     save_location=f"{experiment_directory_path}/",
+    # )
+    #
+    # max_archive = max([int(name.lstrip("archive_").rstrip(".pkl")) for name in os.listdir(f"{experiment_directory_path}") if ((not os.path.isdir(name)) and ("archive_" in name))])
+    #
+    # archive_filename = f"{experiment_directory_path}/archive_{max_archive}.pkl"
+    # fitnesses, centroids, descriptors, individuals = load_archive_from_pickle(archive_filename)
+    #
+    # symmetry_evaluator = SymmetryEvaluation()
 
-    structure_info, known_structures = get_all_materials_with_formula(experiment_parameters.system_name)
 
-    structures_for_comparison ={}
-    for i, structure in enumerate(known_structures):
-        if len(structure.get_atomic_numbers()) == experiment_parameters.fitler_comparison_data_for_n_atoms:
-            structures_for_comparison[str(structure_info[i].material_id)] = structure
 
-    plot_all_maps_in_archive(
-        experiment_directory_path=experiment_directory_path,
-        experiment_parameters=experiment_parameters,
-        all_centroids=all_centroids,
-        target_centroids=target_centroids,
-    )
 
-    plot_all_statistics_from_file(
-        filename=f"{experiment_directory_path}/{experiment_label}.dat",
-        save_location=f"{experiment_directory_path}/",
-    )
-
-    max_archive = max([int(name.lstrip("archive_").rstrip(".pkl")) for name in os.listdir(f"{experiment_directory_path}") if ((not os.path.isdir(name)) and ("archive_" in name))])
-
-    archive_filename = f"{experiment_directory_path}/archive_{max_archive}.pkl"
-    fitnesses, centroids, descriptors, individuals = load_archive_from_pickle(archive_filename)
-    cvt.crystal_evaluator.compare_to_target_structures(
-        generated_structures=[Atoms.fromdict(individual) for individual in individuals],
-        target_structures=structures_for_comparison,
-        directory_string=experiment_directory_path,
-    )
+    # cvt.crystal_evaluator.compare_to_target_structures(
+    #     generated_structures=[Atoms.fromdict(individual) for individual in individuals],
+    #     target_structures=structures_for_comparison,
+    #     directory_string=experiment_directory_path,
+    # )
