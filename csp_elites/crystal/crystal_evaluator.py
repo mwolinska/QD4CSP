@@ -116,7 +116,6 @@ class CrystalEvaluator:
                 n_steps=n_relaxation_steps,
             )
             updated_atoms = list_of_atoms
-            fitness_scores *= -1
         else:
             relaxation_results, updated_atoms = self.relaxer.relax(list_of_atoms, n_relaxation_steps)
             energies = - np.array([relaxation_results[i]["trajectory"]["energies"] for i in range(len(relaxation_results))])
