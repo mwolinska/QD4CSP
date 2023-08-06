@@ -12,7 +12,7 @@ from pymatgen.io.ase import AseAtomsAdaptor
 from pyxtal import pyxtal
 
 from csp_elites.crystal.materials_data_model import StartGenerators
-from csp_elites.parallel_relaxation.force_mutation import GradientMutation
+from csp_elites.crystal.force_mutation import GradientMutation
 
 
 # from jax import jit

@@ -79,11 +79,11 @@ class RelaxedToUnrelaxedIndividualMatching:
             arrows = "no_arrows"
 
         if save_fig:
-            plt.savefig(
+            fig.savefig(
                 str(directory / experiment_tag / f"relaxed_vs_unrelaxed_{archive_number}_{arrows}.png"),
                 format="png")
         else:
-            plt.show()
+            fig.show()
 
     def match_confid_to_individual_index(self, individuals: List[Atoms]):
         configuration_ids = []

@@ -1,5 +1,6 @@
 .idea
 __pycache__
+.pytest_cache
 
 csp_experiments
 
@@ -12,3 +13,8 @@ csp_investigations/
 run_job_on_cluster.sh
 
 used_modes.json
+.experiment.nosync
+
+csp_scripts
+
+script_job.sh
