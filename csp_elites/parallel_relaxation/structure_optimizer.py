@@ -26,8 +26,8 @@ class MultiprocessOptimizer:
     def __init__(self, batch_size=10):
         self.overriden_optimizer = OverridenFire()
         self.atoms_filter = AtomsFilterForRelaxation()
-        # self.model = CHGNet.load()
-        self.model = OverloadCHGnet()
+        self.model = CHGNet.load()
+        # self.model = OverloadCHGnet()
         self.batch_size = batch_size
 
     # GraphConverter()
@@ -145,7 +145,7 @@ class MultiprocessOptimizer:
         elif isinstance(list_of_atoms[0], Structure):
             list_of_structures = list_of_atoms
 
-        predictions = self.model.predict_structure_marta(list_of_structures, batch_size=10)
+        predictions = self.model.predict_structure(list_of_structures, batch_size=10)
         if isinstance(predictions, dict):
             predictions = [predictions]
 
