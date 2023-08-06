@@ -48,13 +48,13 @@ if __name__ == '__main__':
     # energies = []
     # new_descriptors = []
     #
-    # comparator = OFPComparator(n_top=24, dE=1.0,
-    #                            cos_dist_max=1e-3, rcut=10., binwidth=0.05,
-    #                            pbc=[True, True, True], sigma=0.05, nsigma=4,
-    #                            recalculate=False)
-    #
-    # crystal_evaluator = CrystalEvaluator(comparator=comparator)
-    #
+    comparator = OFPComparator(n_top=24, dE=1.0,
+                               cos_dist_max=1e-3, rcut=10., binwidth=0.05,
+                               pbc=[True, True, True], sigma=0.05, nsigma=4,
+                               recalculate=False)
+
+    crystal_evaluator = CrystalEvaluator(comparator=comparator)
+
     # structure_optimizer = StructOptimizer()
     # individuals = [Atoms.fromdict(individual) for individual in individuals]
     #
