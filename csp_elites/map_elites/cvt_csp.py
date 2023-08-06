@@ -77,7 +77,7 @@ class CVT:
         experiment_directory_path = make_experiment_folder(experiment_label)
         log_file = open(f'{experiment_directory_path}/{experiment_label}.dat', 'w')
         memory_log = open(f'{experiment_directory_path}/memory_log.dat', 'w')
-        with open(f'{experiment_directory_path}/experiment_parameters.dat', 'wb') as file:
+        with open(f'{experiment_directory_path}/experiment_parameters.pkl', 'wb') as file:
             pickle.dump(run_parameters, file)
 
         # create the CVT
