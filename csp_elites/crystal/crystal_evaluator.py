@@ -142,8 +142,6 @@ class CrystalEvaluator:
                                range(len(relaxation_results))])
             distance_to_0_force_normalised_to_100 = self.compute_fmax(forces) * 100 # TODO: change this normalisation
             descriptors = (band_gaps, shear_moduli, distance_to_0_force_normalised_to_100)
-            # print(descriptors)
-            # print(fitness_scores)
         else:
             descriptors = (band_gaps, shear_moduli)
 
@@ -211,8 +209,11 @@ class CrystalEvaluator:
                  },
                  }
             )
-        fitnesses = self._apply_force_threshold(energies, forces)
 
+        if self.with_force_threshold:
+            fitnesses = self._apply_force_threshold(energies, forces)
+        else:
+            fitnesses = -1 * energies
         return fitnesses, reformated_output
 
     def _apply_force_threshold(self, energies: np.ndarray, forces: np.ndarray) -> np.ndarray:

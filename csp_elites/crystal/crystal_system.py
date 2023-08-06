@@ -8,6 +8,7 @@ from ase.ga.standardmutations import StrainMutation, PermutationMutation
 from ase.ga.startgenerator import StartGenerator
 from ase.ga.utilities import CellBounds, closest_distances_generator
 import numpy as np
+from chgnet.graph import CrystalGraphConverter
 from pymatgen.io.ase import AseAtomsAdaptor
 from pyxtal import pyxtal
 
@@ -54,6 +55,8 @@ class CrystalSystem:
             141, 156, 186, 189, 194, 205, 227,
         ]
 
+        self.graph_converter = CrystalGraphConverter()
+
     def create_one_individual(self, individual_id: Optional[int]):
         if isinstance(self._start_generator, StartGenerator):
             try:
@@ -82,8 +85,9 @@ class CrystalSystem:
         individuals = []
         for i in range(number_of_individuals):
             new_individual = self.create_one_individual(individual_id=i)
-            new_individual = new_individual.todict()
-            individuals.append(new_individual)
+            if self.graph_converter(AseAtomsAdaptor.get_structure(atoms=new_individual), on_isolated_atoms="warn") is not None:
+                new_individual = new_individual.todict()
+                individuals.append(new_individual)
         return individuals
 
     def _initialise_start_generator(self, start_generator : StartGenerators):

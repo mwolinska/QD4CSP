@@ -43,6 +43,7 @@ from typing import List, Optional
 import numpy as np
 import psutil
 from ase import Atoms
+from chgnet.graph import CrystalGraphConverter
 from matplotlib import pyplot as plt
 from pymatgen.io.ase import AseAtomsAdaptor
 # from numba import jit, prange
@@ -67,7 +68,7 @@ class CVT:
         self.number_of_bd_dimensions = number_of_bd_dimensions
         self.crystal_system = crystal_system
         self.crystal_evaluator = crystal_evaluator
-
+        self.graph_converter = CrystalGraphConverter()
     def batch_compute_with_list_of_atoms(self,
         number_of_niches,
         maximum_evaluations,
@@ -138,8 +139,12 @@ class CVT:
                     if z is None:
                         print(" z is none bug")
                     else:
-                        z = z.todict()
-                        population += [z]
+                        if self.graph_converter(AseAtomsAdaptor.get_structure(z), on_isolated_atoms="warn") is not None:
+                            z = z.todict()
+                            population += [z]
+
+            # Check population for isolated atoms
+            # population = [individual for individual in population if self.graph_converter( on_isolated_atoms="warn") is not None]
 
             if relax_every_n_generations != 0:
                 if generation_counter % relax_every_n_generations == 0:
@@ -148,8 +153,6 @@ class CVT:
                     n_relaxation_steps = run_parameters["number_of_relaxation_steps"]
             else:
                 n_relaxation_steps = run_parameters["number_of_relaxation_steps"]
-
-            print(n_relaxation_steps)
 
             population_as_atoms, population, fitness_scores, descriptors, kill_list = self.crystal_evaluator.batch_compute_fitness_and_bd(
                 list_of_atoms=population,
