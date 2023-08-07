@@ -20,9 +20,10 @@ if __name__ == '__main__':
     atoms_for_ref.rattle(0.1)
     atoms_to_test = copy.deepcopy(atoms_for_ref)
 
-    model = CHGNet.load()
-    batch_sizes_to_test = [0.05, 0.1, 0.2, 0.5]
-    n_individuals_to_test = [1, 20, 50, 100, 200]
+    model = CHGNet.load().to("cuda")
+    # batch_sizes_to_test = [0.05, 0.1, 0.2, 0.5]
+    batch_sizes_to_test = [10, 20]
+    n_individuals_to_test = [20, 50, 100]
 
     # batch_sizes_to_test = [0.25, 0.5]
     # n_individuals_to_test = [2, 4]
@@ -37,7 +38,8 @@ if __name__ == '__main__':
         print(batch_size_percent)
         timings_per_batch_size = []
         for population_size in n_individuals_to_test:
-            batch_size = max(int(batch_size_percent * population_size), 1)
+            batch_size = batch_size_percent
+            # batch_size = max(int(batch_size_percent * population_size), 1)
             structures = [copy.deepcopy(structure) for i in range(population_size)]
             tic = time.time()
             model.predict_structure(structures, batch_size=batch_size)
