@@ -20,7 +20,8 @@ if __name__ == '__main__':
     atoms_for_ref.rattle(0.1)
     atoms_to_test = copy.deepcopy(atoms_for_ref)
 
-    model = CHGNet.load().to("cuda")
+    # model = CHGNet.load().to("cuda")
+    model = CHGNet.load()
     # batch_sizes_to_test = [0.05, 0.1, 0.2, 0.5]
     batch_sizes_to_test = [10, 20]
     n_individuals_to_test = [20, 50, 100]
