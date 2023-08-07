@@ -144,14 +144,39 @@ class MultiprocessOptimizer:
             list_of_structures = [AseAtomsAdaptor.get_structure(list_of_atoms[i]) for i in range(len(list_of_atoms))]
         elif isinstance(list_of_atoms[0], Structure):
             list_of_structures = list_of_atoms
+        hotfix_graphs = False
+        graphs = [self.model.graph_converter(struct) for struct in list_of_structures]
+        if None in graphs:
+            hotfix_graphs = True
+            indices_to_update = []
+            for i in range(len(graphs)):
+                if graphs[i] is None:
+                    indices_to_update.append(i)
 
-        predictions = self.model.predict_structure(list_of_structures, batch_size=10)
+        predictions = self.model.predict_graph(
+            graphs,
+            task="efsm",
+            return_atom_feas=False,
+            return_crystal_feas=False,
+            batch_size=10,
+        )
+
+        # predictions = self.model.predict_structure(list_of_structures, batch_size=10)
         if isinstance(predictions, dict):
             predictions = [predictions]
 
         forces = np.array([pred["f"] for pred in predictions])
         energies = np.array([pred["e"] for pred in predictions])
         stresses = np.array([pred["s"] for pred in predictions])
+
+        if hotfix_graphs:
+            print("hotfix graph")
+            # todo: make this dynamic
+            for i in indices_to_update:
+                forces = np.insert(forces, i, np.full((24,3), 100), axis=0)
+                energies = np.insert(energies, i, 10000)
+                stresses = np.insert(stresses, i, np.full((3,3), 100), axis=0)
+
         return forces, energies, stresses
 
     def _update_trajectories(self, trajectories: List[TrajectoryObserver], forces, energies, stresses) -> List[TrajectoryObserver]:
