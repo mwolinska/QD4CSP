@@ -5,18 +5,27 @@ import time
 import numpy as np
 from chgnet.model import CHGNet
 from matplotlib import pyplot as plt
+from mp_api.client import MPRester
 from pymatgen.io.ase import AseAtomsAdaptor
 
-from csp_elites.parallel_relaxation.structure_to_use import atoms_to_test
+# from csp_elites.parallel_relaxation.structure_to_use import atoms_to_test
 
 if __name__ == '__main__':
 
-    model = CHGNet.load()
-    # batch_sizes_to_test = [0.05, 0.1, 0.2, 0.5]
-    # n_individuals_to_test = [1, 20, 50, 100, 200]
+    with MPRester(api_key="4nB757V2Puue49BqPnP3bjRPksr4J9y0") as mpr:
+        one_structure = mpr.get_structure_by_material_id("mp-1341203", final=True)
 
-    batch_sizes_to_test = [0.25, 0.5]
-    n_individuals_to_test = [2, 4]
+    atoms_for_ref = AseAtomsAdaptor.get_atoms(one_structure)
+
+    atoms_for_ref.rattle(0.1)
+    atoms_to_test = copy.deepcopy(atoms_for_ref)
+
+    model = CHGNet.load()
+    batch_sizes_to_test = [0.05, 0.1, 0.2, 0.5]
+    n_individuals_to_test = [1, 20, 50, 100, 200]
+
+    # batch_sizes_to_test = [0.25, 0.5]
+    # n_individuals_to_test = [2, 4]
 
     structure = AseAtomsAdaptor.get_structure(copy.deepcopy(atoms_to_test))
 
