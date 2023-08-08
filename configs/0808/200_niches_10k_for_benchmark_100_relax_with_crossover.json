@@ -64,7 +64,7 @@
     "curiosity_weights": true,
     "filter_starting_Structures": 24,
     "seed": false,
-    "profiling": true,
+    "profiling": true
   },
   "experiment_tag": "200_niches_for_benchmark_100_relax_with_crossover",
   "fitness_min_max_values": [
