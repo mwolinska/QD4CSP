@@ -119,7 +119,7 @@ class MultiprocessOptimizer:
                 }
             )
         self.timings["for_loop"]["reformating_output"] = time.time() - tic
-        pprint(self.timings)
+        # pprint(self.timings)
         self.timings_list.append(copy.deepcopy(self.timings))
         return reformated_output, list_of_atoms
 
@@ -143,6 +143,8 @@ class MultiprocessOptimizer:
             for i in range(len(graphs)):
                 if graphs[i] is None:
                     indices_to_update.append(i)
+
+            graphs = [graph for graph in graphs if graph is not None]
         self.timings["for_loop"]["check_graph_for_isolated"] = time.time() - tic
 
         tic = time.time()
@@ -233,7 +235,7 @@ if __name__ == '__main__':
 
     optimizer.model.predict_graph(
         graphs,
-        task="efsm",
+        task="efs",
         return_atom_feas=False,
         return_crystal_feas=False,
         batch_size=batch_size,
