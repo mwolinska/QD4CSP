@@ -133,7 +133,7 @@ class MultiprocessOptimizer:
 
         hotfix_graphs = False
         tic = time.time()
-        graphs = [self.model.graph_converter(struct) for struct in list_of_structures]
+        graphs = [self.model.graph_converter(struct, on_isolated_atoms="warn") for struct in list_of_structures]
         self.timings["list_comprehension"]["convert_structures_to_graphs"] = time.time() - tic
 
         tic = time.time()
