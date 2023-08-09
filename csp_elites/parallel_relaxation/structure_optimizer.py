@@ -138,13 +138,18 @@ class MultiprocessOptimizer:
 
         tic = time.time()
         if None in graphs:
+            print("isolated atomssss")
+            print(f"graphs starting length {len(graphs)}")
             hotfix_graphs = True
             indices_to_update = []
             for i in range(len(graphs)):
+                print(i)
                 if graphs[i] is None:
                     indices_to_update.append(i)
+                    graphs.pop(i)
 
-            graphs = [graph for graph in graphs if graph is not None]
+            print(f"graphs end length {len(graphs)}")
+
         self.timings["for_loop"]["check_graph_for_isolated"] = time.time() - tic
 
         tic = time.time()
