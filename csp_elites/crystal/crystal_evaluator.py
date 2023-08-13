@@ -26,13 +26,16 @@ class CrystalEvaluator:
                  with_force_threshold=True,
                  constrained_qd=False,
                  relax_every_n_generations=0,
+                 fmax_threshold: float = 0.2,
                  ):
 
-        self.relaxer = MultiprocessOptimizer()
+        self.relaxer = MultiprocessOptimizer(
+            fmax_threshold=fmax_threshold
+        )
         self.comparator = comparator
         self.band_gap_calculator = matgl.load_model("MEGNet-MP-2019.4.1-BandGap-mfi")
         self.shear_modulus_calculator = megnet_load_model("logG_MP_2018")
-        self.fmax_threshold = 0.2
+        self.fmax_threshold = fmax_threshold
         self.with_force_threshold = with_force_threshold
         self.constrained_qd = constrained_qd
         self.relax_every_n_generations = relax_every_n_generations

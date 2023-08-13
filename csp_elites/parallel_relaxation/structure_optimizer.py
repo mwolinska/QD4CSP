@@ -21,7 +21,7 @@ from csp_elites.parallel_relaxation.unit_cell_filter import AtomsFilterForRelaxa
 
 
 class MultiprocessOptimizer:
-    def __init__(self, batch_size=10):
+    def __init__(self, batch_size=10, fmax_threshold: float = 0.2):
         self.overriden_optimizer = OverridenFire()
         self.atoms_filter = AtomsFilterForRelaxation()
         self.model = CHGNet.load()
@@ -29,6 +29,7 @@ class MultiprocessOptimizer:
         self.timings = None
         self.reset_timings()
         self.timings_list = []
+        self.fmax_threshold = fmax_threshold
 
     def reset_timings(self):
         self.timings = {
@@ -97,7 +98,7 @@ class MultiprocessOptimizer:
                                                                 np.array([1] * len(list_of_atoms)))
                 self.timings["vectorised"]["relax3_update_positions"] = time.time() - tic
                 tic = time.time()
-                converged_mask = self.overriden_optimizer.converged(forces, fmax)
+                converged_mask = self.overriden_optimizer.converged(forces, self.fmax_threshold)
                 Nsteps += 1
                 all_relaxed = self._end_relaxation(Nsteps, n_relaxation_steps, converged_mask)
                 self.timings["vectorised"]["check_convergence"] = time.time() - tic
