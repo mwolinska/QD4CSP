@@ -79,10 +79,10 @@ def benchmark_force_mutation():
         alternative_operators=None,
     )
 
-    starting_individuals = crystal_system.create_n_individuals(number_of_individuals)
-
-    with open(pathlib.Path(__file__).parent / "data" / f"TiO2_{number_of_individuals}_structures.pkl", "wb") as file:
-        pickle.dump(starting_individuals, file)
+    # starting_individuals = crystal_system.create_n_individuals(number_of_individuals)
+    #
+    # with open(pathlib.Path(__file__).parent / "data" / f"TiO2_{number_of_individuals}_structures.pkl", "wb") as file:
+    #     pickle.dump(starting_individuals, file)
 
     closest_distances = closest_distances_generator(atom_numbers=np.unique(np.array(experiment_parameters.blocks)),
                                                     ratio_of_covalent_radii=experiment_parameters.ratio_of_covalent_radii)
@@ -96,7 +96,7 @@ def benchmark_force_mutation():
     number_of_steps = 50
     all_data = []
     list_of_atoms = starting_atoms
-    for learning_rate in tqdm([0.0001, 0.001, 0.01, 0.1]):
+    for learning_rate in tqdm([0.1]):
         force_mutation = GradientMutation(
             blmin=closest_distances, n_top=len(experiment_parameters.blocks),
             learning_rate=learning_rate
