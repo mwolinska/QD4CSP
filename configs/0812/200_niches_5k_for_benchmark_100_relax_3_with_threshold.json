@@ -67,7 +67,7 @@
     "profiling": true,
     "force_threshold": true
   },
-  "experiment_tag": "200_niches_for benchmark_100_relax_2_with_threshold",
+  "experiment_tag": "200_niches_for benchmark_100_relax_3_with_threshold",
   "fitness_min_max_values": [
     6.5,
     9
