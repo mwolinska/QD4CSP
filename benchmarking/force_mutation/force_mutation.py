@@ -6,6 +6,7 @@ from ase import Atoms
 from ase.ga.utilities import CellBounds, closest_distances_generator
 from chgnet.model import CHGNet
 from pymatgen.io.ase import AseAtomsAdaptor
+from tqdm import tqdm
 
 from csp_elites.crystal.crystal_system import CrystalSystem
 from csp_elites.crystal.force_mutation import GradientMutation
@@ -95,13 +96,13 @@ def benchmark_force_mutation():
     number_of_steps = 200
     all_data = []
     list_of_atoms = starting_atoms
-    for learning_rate in [0.00001, 0.0001, 0.001, 0.01, 0.1]:
+    for learning_rate in tqdm([0.00001, 0.0001, 0.001, 0.01, 0.1]):
         force_mutation = GradientMutation(
             blmin=closest_distances, n_top=len(experiment_parameters.blocks),
             learning_rate=learning_rate
         )
 
-        for i in range(number_of_steps):
+        for i in tqdm(range(number_of_steps)):
             atoms_after_1_step = []
             incorrect_individual_indices = []
             for i, atoms in enumerate(list_of_atoms):
