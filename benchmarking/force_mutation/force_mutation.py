@@ -12,7 +12,9 @@ from csp_elites.crystal.force_mutation import GradientMutation
 from csp_elites.crystal.materials_data_model import MaterialProperties, StartGenerators
 from csp_elites.utils.experiment_parameters import ExperimentParameters
 
-if __name__ == '__main__':
+
+
+def benchmark_force_mutation():
     number_of_individuals = 10
 
     experiment_parameters = ExperimentParameters(
@@ -153,3 +155,8 @@ if __name__ == '__main__':
 
             with open(pathlib.Path(__file__).parent / "data" / f"TiO2_{number_of_individuals}_steps_{number_of_steps}_lr_{learning_rate}.pkl", "wb") as file:
                 pickle.dump(all_data, file)
+
+
+
+if __name__ == '__main__':
+    benchmark_force_mutation()
