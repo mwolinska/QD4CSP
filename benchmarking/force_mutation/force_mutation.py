@@ -15,7 +15,7 @@ from csp_elites.utils.experiment_parameters import ExperimentParameters
 
 
 def benchmark_force_mutation():
-    number_of_individuals = 10
+    number_of_individuals = 1000
 
     experiment_parameters = ExperimentParameters(
         number_of_niches=20,
@@ -77,11 +77,11 @@ def benchmark_force_mutation():
         start_generator=experiment_parameters.start_generator,
         alternative_operators=None,
     )
-    #
-    # starting_individuals = crystal_system.create_n_individuals(number_of_individuals)
-    #
-    # with open(pathlib.Path(__file__).parent / "data" / f"TiO2_{number_of_individuals}_structures.pkl", "wb") as file:
-    #     pickle.dump(starting_individuals, file)
+
+    starting_individuals = crystal_system.create_n_individuals(number_of_individuals)
+
+    with open(pathlib.Path(__file__).parent / "data" / f"TiO2_{number_of_individuals}_structures.pkl", "wb") as file:
+        pickle.dump(starting_individuals, file)
 
     closest_distances = closest_distances_generator(atom_numbers=np.unique(np.array(experiment_parameters.blocks)),
                                                     ratio_of_covalent_radii=experiment_parameters.ratio_of_covalent_radii)
@@ -92,11 +92,10 @@ def benchmark_force_mutation():
     starting_atoms = [Atoms.fromdict(atoms) for atoms in starting_atom_dictionaries]
 
     model = CHGNet.load()
-    number_of_steps = 3
+    number_of_steps = 200
     all_data = []
     list_of_atoms = starting_atoms
-    # for learning_rate in [0.00001, 0.0001, 0.001, 0.01, 0.1]:
-    for learning_rate in [0.01, 0.1]:
+    for learning_rate in [0.00001, 0.0001, 0.001, 0.01, 0.1]:
         force_mutation = GradientMutation(
             blmin=closest_distances, n_top=len(experiment_parameters.blocks),
             learning_rate=learning_rate
