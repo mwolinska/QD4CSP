@@ -66,7 +66,7 @@
     "seed": false,
     "profiling": true
   },
-  "experiment_tag": "200_niches_for benchmark_100_relax_with_soft",
+  "experiment_tag": "200_niches_for benchmark_100_relax_with_crossover",
   "fitness_min_max_values": [
     6.5,
     9
