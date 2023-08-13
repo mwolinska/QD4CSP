@@ -16,7 +16,7 @@ from csp_elites.utils.experiment_parameters import ExperimentParameters
 
 
 def benchmark_force_mutation():
-    number_of_individuals = 1000
+    number_of_individuals = 100
 
     experiment_parameters = ExperimentParameters(
         number_of_niches=20,
@@ -93,10 +93,10 @@ def benchmark_force_mutation():
     starting_atoms = [Atoms.fromdict(atoms) for atoms in starting_atom_dictionaries]
 
     model = CHGNet.load()
-    number_of_steps = 200
+    number_of_steps = 50
     all_data = []
     list_of_atoms = starting_atoms
-    for learning_rate in tqdm([0.00001, 0.0001, 0.001, 0.01, 0.1]):
+    for learning_rate in tqdm([0.0001, 0.001, 0.01, 0.1]):
         force_mutation = GradientMutation(
             blmin=closest_distances, n_top=len(experiment_parameters.blocks),
             learning_rate=learning_rate
