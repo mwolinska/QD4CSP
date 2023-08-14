@@ -95,7 +95,7 @@ def benchmark_force_mutation():
     model = CHGNet.load()
     number_of_steps = 50
 
-    for learning_rate in tqdm([0.0001, 0.001, 0.01, 0.1]):
+    for learning_rate in tqdm([0.001, 0.01, 0.1]):
         all_data = []
         list_of_atoms = starting_atoms
         force_mutation = GradientMutation(
@@ -174,7 +174,7 @@ if __name__ == '__main__':
     # for learning_rate in tqdm([0.0001, 0.001, 0.01, 0.1]):
 
 
-    learning_rates = [0.0001]
+    learning_rates = [0.01]
     number_of_steps = 50
     number_of_structures = 100
 
@@ -184,4 +184,11 @@ if __name__ == '__main__':
             all_data = pickle.load(file)
             print(len(all_data))
 
-        print()
+
+    fake_1 = all_data[:50]
+    fake_2 = all_data[50:100]
+    fake_3 = all_data[100:]
+
+    print()
+
+    # print()
