@@ -18,3 +18,7 @@ used_modes.json
 csp_scripts
 
 script_job.sh
+
+list_of_configs.csv
+
+report_figures/
