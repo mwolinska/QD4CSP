@@ -75,7 +75,8 @@ class Archive:
             present_centroid = np.argwhere(all_centroids == self.centroids[i])
             fitness_for_plotting[present_centroid[0][0]] = self.fitnesses[i]
             descriptors_for_plotting[present_centroid[0][0]] = self.descriptors[i]
-            labels_for_plotting[present_centroid[0][0]] = str(self.labels[i])
+            if self.labels is not None:
+                labels_for_plotting[present_centroid[0][0]] = str(self.labels[i])
 
         return fitness_for_plotting, descriptors_for_plotting, labels_for_plotting
 
