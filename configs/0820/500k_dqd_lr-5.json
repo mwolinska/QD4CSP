@@ -74,9 +74,9 @@
       ["dqd", 10]
     ],
     "dqd": true,
-    "dqd_learning_rate": 0.01
+    "dqd_learning_rate": 0.00001
   },
-  "experiment_tag": "500k_lr-2",
+  "experiment_tag": "500k_lr-5",
   "fitness_min_max_values": [
     6.5,
     9
