@@ -75,7 +75,7 @@
     "dqd": true,
     "dqd_learning_rate": 0.00001
   },
-  "experiment_tag": "500k_lr-5_10_relax_steps_always",
+  "experiment_tag": "500k_lr-5_10_ten_relax_steps_always",
   "fitness_min_max_values": [
     6.5,
     10
