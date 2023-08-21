@@ -168,6 +168,7 @@ class CrystalSystem:
                     blmin=closest_distances, n_top=len(self.atomic_numbers),
                     learning_rate=learning_rate
                 )
+                operator_list.append(self._dqd_cma_mutation)
             else:
                 raise NotImplementedError
 
@@ -180,7 +181,7 @@ class CrystalSystem:
 
     def mutate(self, parents: List[Species]) -> Atoms:
         mutator = self.operators.get_operator()
-        if isinstance(mutator, DQDMutationOMGMEGA):
+        if isinstance(mutator, DQDMutationOMGMEGA) or isinstance(mutator, DQDMutationCMAMEGA):
             new_individual, _ = mutator.get_new_individual(parents)
         else:
             new_individual, _ = mutator.get_new_individual(
