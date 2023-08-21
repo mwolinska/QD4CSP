@@ -70,7 +70,7 @@
     "relax_every_n_generations": 0,
     "relax_archive_every_n_generations": 0,
     "alternative_operators": [
-      ["dqd", 10]
+      ["dqd_cma", 10]
     ],
     "dqd": true,
     "dqd_learning_rate": 1

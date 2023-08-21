@@ -12,7 +12,8 @@ from chgnet.graph import CrystalGraphConverter
 from pymatgen.io.ase import AseAtomsAdaptor
 from pyxtal import pyxtal
 
-from csp_elites.crystal.force_mutation import GradientMutation, DQDMutationOMGMEGA
+from csp_elites.crystal.force_mutation import GradientMutation, DQDMutationOMGMEGA, \
+    DQDMutationCMAMEGA
 from csp_elites.crystal.materials_data_model import StartGenerators
 from csp_elites.map_elites.elites_utils import Species
 
@@ -49,6 +50,8 @@ class CrystalSystem:
         self._gradient_mutation = None
         self._rattle_mutation = None
         self._dqd_mutation = None
+        self._dqd_cma_mutation = None
+
         self.operators = self._initialise_operators(operator_probabilities) if alternative_operators is None else self._initialise_alternative_operators(alternative_operators, learning_rate)
         self.compound_formula = compound_formula
         self._possible_pyxtal_modes =  [
@@ -159,7 +162,12 @@ class CrystalSystem:
                     learning_rate=learning_rate
                 )
                 operator_list.append(self._dqd_mutation)
-
+            elif operator == "dqd_cma":
+                print(f"I'm doing DQD CMA with {learning_rate} lr")
+                self._dqd_cma_mutation = DQDMutationCMAMEGA(
+                    blmin=closest_distances, n_top=len(self.atomic_numbers),
+                    learning_rate=learning_rate
+                )
             else:
                 raise NotImplementedError
 
