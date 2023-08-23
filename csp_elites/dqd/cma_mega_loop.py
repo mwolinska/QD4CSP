@@ -73,76 +73,6 @@ class CMAMEGALOOP:
             lr=self.step_size_gradient_optimizer_niu
         )
         self._restart_rule = 'no_improvement'
-
-
-    def mutate(self, species: Species):
-        """Does the actual mutation."""
-        atoms = Atoms.fromdict(species.x)
-        # forces = self.normalize_gradient(species.fitness_gradient)
-        # forces = forces[:len(species.x["positions"]), :]
-        # descriptor_gradients = np.array([self.normalize_gradient(grad) for grad in species.descriptor_gradients])
-
-        gradient_stack = np.vstack([[species.fitness_gradient[:len(species.x["positions"])], species.descriptor_gradients[0],
-                                     species.descriptor_gradients[1]]])
-        all_gradients_normalised = self.normalize_all_gradients_at_once(gradient_stack)
-        # all_gradients_normalised = self.normalize_all_gradients_at_once(np.concatenate([forces, descriptor_gradients[0]]))
-        # N = len(atoms) if self.n_top is None else self.n_top
-        N = len(atoms)
-        slab = atoms[:len(atoms) - N]
-        atoms = atoms[-N:]
-
-        coeficients = self.coef_optimizer.ask(
-            self._coeff_lower_bounds,
-            self._coeff_upper_bounds,
-        )[:, :, None].reshape((-1, self.num_coefficeints, 1, 1))
-
-        gradient_mutation_amount = coeficients * all_gradients_normalised
-        gradient_mutation_amount = gradient_mutation_amount.sum(axis=1)
-
-        new_atoms = [Atoms.fromdict(species.x) for _ in range(self.coef_optimizer.batch_size)]
-        for i, atom in enumerate(new_atoms):
-            new_atoms[i].set_positions(new_atoms[i].get_positions() + gradient_mutation_amount[i])
-        new_atoms = [el.todict() for el in new_atoms]
-        updated_atoms, _, fitness_scores, descriptors, _, all_gradients = self.crystal_evaluator.batch_compute_fitness_and_bd(
-            new_atoms, cellbounds= self.cellbounds ,
-                                 really_relax=None, behavioral_descriptor_names=None,
-                                 n_relaxation_steps=0
-        )
-
-        solution_batch = updated_atoms
-        objective_batch = np.asarray(fitness_scores)
-        measures_batch = np.asarray(descriptors)
-        status_batch = None
-        value_batch = np.asarray(fitness_scores) # TODO: this needs to be fixed to be better
-        batch_size = len(solution_batch)
-        metadata_batch = np.empty(batch_size, dtype=object)
-
-
-        indices, ranking_values = self._ranker.rank(
-            self, None, self._rng, solution_batch, objective_batch,
-            measures_batch, status_batch, value_batch, metadata_batch)
-
-        num_parents =  self.coef_optimizer.batch_size // 2 # todo this can be based on new solutions updated_atoms if self._selection_rule == "filter" else
-        self.coef_optimizer.tell(indices, num_parents)
-
-        parents = [el.get_positions() for i, el in enumerate(updated_atoms) if i in indices]
-        parents = parents[:num_parents]
-        weights = (np.log(num_parents + 0.5) -
-                   np.log(np.arange(1, num_parents + 1)))
-        weights = weights / np.sum(weights)  # Normalize weights
-
-        new_mean = (parents * weights).sum(axis=2).sum(axis=1)
-
-        gradient_step = new_mean - self._grad_opt.theta
-        self._grad_opt.step(gradient_step)
-        top = updated_atoms[indices[0]]
-
-        mutant = slab + top
-        return mutant
-
-    # def normalize_gradient(self, gradient: np.ndarray):
-    #     return (gradient - np.min(gradient)) / (np.max(gradient) - np.min(gradient))
-
     def normalize_all_gradients_at_once(self, gradients: np.ndarray):
         norms = np.linalg.norm(gradients, axis=2, keepdims=True)
         gradients /= norms
@@ -291,6 +221,7 @@ class CMAMEGALOOP:
                 experiment_directory_path,
                 run_parameters["behavioural_descriptors"],
                 run_parameters['cvt_use_cache'],
+                formula=self.crystal_system.compound_formula,
                 )
         kdt = KDTree(c, leaf_size=30, metric='euclidean')
         write_centroids(
@@ -298,6 +229,7 @@ class CMAMEGALOOP:
             bd_names=run_parameters["behavioural_descriptors"],
             bd_minimum_values=run_parameters["bd_minimum_values"],
             bd_maximum_values=run_parameters["bd_maximum_values"],
+            formula=self.crystal_system.compound_formula,
         )
         del c
         return kdt

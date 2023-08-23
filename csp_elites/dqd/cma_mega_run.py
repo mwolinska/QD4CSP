@@ -5,6 +5,7 @@ from csp_elites.crystal.crystal_evaluator import CrystalEvaluator
 from csp_elites.crystal.crystal_system import CrystalSystem
 from csp_elites.crystal.materials_data_model import StartGenerators, MaterialProperties
 from csp_elites.dqd.cma_mega_loop import CMAMEGALOOP
+from csp_elites.map_elites.elites_utils import make_current_time_string
 from csp_elites.utils.experiment_parameters import ExperimentParameters
 
 
@@ -47,7 +48,9 @@ def main_cma(experiment_parameters: ExperimentParameters):
         initial_cmaes_step_size_sigma_g=experiment_parameters.cvt_run_parameters["cma_sigma_0"]
     )
 
-
+    current_time_label = make_current_time_string(with_time=True)
+    experiment_label = \
+        f"{current_time_label}_{experiment_parameters.system_name}_{experiment_parameters.experiment_tag}"
     cma.compute(experiment_parameters.number_of_niches,
                 experiment_parameters.maximum_evaluations,
                 experiment_parameters.cvt_run_parameters,
