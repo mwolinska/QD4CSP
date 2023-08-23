@@ -78,7 +78,7 @@
     "cma_learning_rate": 1,
     "cma_sigma_0": 1
   },
-  "experiment_tag": "cma_100_relaxation_lr1_sigma1",
+  "experiment_tag": "cma_100_relaxation_lr1_sigma1_with_force_threshold",
   "fitness_min_max_values": [
     6.5,
     10
