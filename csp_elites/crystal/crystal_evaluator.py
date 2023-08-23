@@ -153,7 +153,7 @@ class CrystalEvaluator:
 
         if self.constrained_qd:
             distance_to_bg = self.ground_state_data["band_gap"] - np.array(band_gaps)
-            distance_to_shear = self.ground_state_data["shear_modulus"] - shear_moduli
+            distance_to_shear = self.ground_state_data["shear_modulus"] - np.array(shear_moduli)
             # descriptors = (distance_to_bg, distance_to_shear)
             forces = np.array([relaxation_results[i]["trajectory"]["forces"] for i in
                                range(len(relaxation_results))])
