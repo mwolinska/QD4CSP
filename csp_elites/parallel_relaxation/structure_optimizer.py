@@ -1,4 +1,7 @@
 from __future__ import annotations
+print("initialising multiprocess optimiser")
+
+
 
 import copy
 import time
@@ -9,8 +12,6 @@ from typing import List
 import numpy as np
 from ase import Atoms
 from chgnet.model import CHGNet
-from chgnet.model.dynamics import TrajectoryObserver, \
-    StructOptimizer, CHGNetCalculator
 from mp_api.client import MPRester
 from pymatgen.core import Structure
 from pymatgen.io.ase import AseAtomsAdaptor
@@ -216,21 +217,18 @@ class MultiprocessOptimizer:
         if hotfix_graphs:
             print("hotfix graph")
             # todo: make this dynamic
-            for i in indices_to_update:
-                forces = np.insert(forces, i, np.full((24,3), 100), axis=0)
-                energies = np.insert(energies, i, 10000)
-                stresses = np.insert(stresses, i, np.full((3,3), 100), axis=0)
+            if len(forces) == 0:
+                forces = np.full((len(indices_to_update),24,3), 100)
+                energies = np.full((len(indices_to_update)), 100)
+                stresses = np.full((len(indices_to_update), 3, 3), 100)
+            else:
+                for i in indices_to_update:
+                    forces = np.insert(forces, i, np.full((24,3), 100), axis=0)
+                    energies = np.insert(energies, i, 10000)
+                    stresses = np.insert(stresses, i, np.full((3,3), 100), axis=0)
         self.timings["for_loop"]["update_predictions_if_graph_hotfix"] = time.time() - tic
 
         return forces, energies, stresses
-
-    def _update_trajectories(self, trajectories: List[TrajectoryObserver], forces, energies, stresses) -> List[TrajectoryObserver]:
-        for i in range(len(trajectories)):
-            trajectories[i].energies.append(energies[i])
-            trajectories[i].forces.append(forces)
-            trajectories[i].stresses.append(stresses)
-        return trajectories
-
 
     def _end_relaxation(self, nsteps: int, max_steps: int, forces_mask:np.ndarray):
         return (nsteps > max_steps) or forces_mask.all()
@@ -242,7 +240,7 @@ if __name__ == '__main__':
     batch_size = 10
 
     optimizer = MultiprocessOptimizer(batch_size=batch_size)
-    optimizer_ref = StructOptimizer()
+    # optimizer_ref = StructOptimizer()
 
 
     with MPRester(api_key="4nB757V2Puue49BqPnP3bjRPksr4J9y0") as mpr:

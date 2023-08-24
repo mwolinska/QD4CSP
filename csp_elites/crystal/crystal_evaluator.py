@@ -1,17 +1,16 @@
+print("initialising crystal eval")
 import warnings
 from typing import Optional, List, Dict
 
-import matgl
 import numpy as np
 import torch
+
 from ase import Atoms
 from ase.build import niggli_reduce
 from ase.ga.ofp_comparator import OFPComparator
 from ase.ga.utilities import CellBounds
 from matplotlib import pyplot as plt
-from megnet.utils.models import load_model as megnet_load_model
 from pymatgen.core import Structure
-from pymatgen.io.ase import AseAtomsAdaptor
 
 from csp_elites.crystal.band_gap_calculator import BandGapCalculator
 from csp_elites.crystal.materials_data_model import BandGapEnum, MaterialProperties

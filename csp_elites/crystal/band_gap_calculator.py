@@ -1,10 +1,11 @@
-import dgl
+print("initialising band gap calc")
+
 import matgl
 import torch
 from matgl.ext.pymatgen import Structure2Graph
+from matgl.graph.compute import compute_pair_vector_and_distance
 from mp_api.client import MPRester
 from pymatgen.core import Structure
-from matgl.graph.compute import compute_pair_vector_and_distance
 
 
 class BandGapCalculator:
