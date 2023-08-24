@@ -1,3 +1,6 @@
+print("initialising shear modulus calc ")
+
+
 import dgl
 import numpy as np
 import torch

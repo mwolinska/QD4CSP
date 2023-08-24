@@ -1,3 +1,5 @@
+print("initialising crystal system")
+
 import json
 import pathlib
 from typing import List, Dict, Tuple, Optional
@@ -60,9 +62,6 @@ class CrystalSystem:
         self._possible_pyxtal_modes = self.load_possible_pyxtal_spacegroups()
 
         self.graph_converter = CrystalGraphConverter()
-
-
-
     def load_possible_pyxtal_spacegroups(self):
         if self.compound_formula is None:
             return [1,  8, 11, 12, 14, 15, 25, 35, 59, 60, 61, 62, 63, 74, 87, 136,
@@ -71,9 +70,8 @@ class CrystalSystem:
             reference_tag = f"{self.compound_formula}_{len(self.atom_numbers_to_optimise)}"
             with open(self.main_experiment_directory.parent / "mp_reference_analysis" / reference_tag / f"{reference_tag}_allowed_symmetries.json", "r") as file:
                 valid_spacegroups_for_combination = json.load(file)
-
+                valid_spacegroups_for_combination = np.unique(valid_spacegroups_for_combination)
             return valid_spacegroups_for_combination
-
 
     def create_one_individual(self, individual_id: Optional[int]):
         if isinstance(self._start_generator, StartGenerator):
@@ -104,7 +102,9 @@ class CrystalSystem:
         individuals = []
         print("generating individuals")
         for i in range(number_of_individuals):
-            new_individual = self.create_one_individual(individual_id=i)
+            new_individual = None
+            while new_individual is None:
+                new_individual = self.create_one_individual(individual_id=i)
             graph = self.graph_converter(AseAtomsAdaptor.get_structure(atoms=new_individual), on_isolated_atoms="warn")
             # print(graph)
             if graph is not None:
@@ -113,6 +113,7 @@ class CrystalSystem:
                 individuals.append(new_individual)
             else:
                 print("isolated bluu")
+        print(f"generated {individuals}")
         return individuals
 
     def _initialise_start_generator(self, start_generator : StartGenerators):

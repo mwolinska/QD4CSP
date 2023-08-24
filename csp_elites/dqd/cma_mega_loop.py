@@ -1,31 +1,31 @@
 import pickle
+from typing import TYPE_CHECKING
 
 import numpy as np
 from ase import Atoms
 from ase.ga.utilities import CellBounds
-from chgnet.graph import CrystalGraphConverter
 from ribs.emitters.opt import _get_es, _get_grad_opt
 from ribs.emitters.rankers import _get_ranker
 from sklearn.neighbors import KDTree
 
-from csp_elites.crystal.crystal_evaluator import CrystalEvaluator
-from csp_elites.crystal.crystal_system import CrystalSystem
-from csp_elites.map_elites.elites_utils import cvt, write_centroids, make_experiment_folder, \
-    Species, add_to_archive, save_archive
+if TYPE_CHECKING:
+    from csp_elites.crystal.crystal_evaluator import CrystalEvaluator
+    from csp_elites.crystal.crystal_system import CrystalSystem
+from csp_elites.map_elites.elites_utils import cvt, write_centroids, make_experiment_folder, add_to_archive, save_archive
 
 
 class CMAMEGALOOP:
     def __init__(self,
                  number_of_bd_dimensions: int,
-                 crystal_system: CrystalSystem,
-                 crystal_evaluator: CrystalEvaluator,
+                 crystal_system: "CrystalSystem",
+                 crystal_evaluator: "CrystalEvaluator",
                  step_size_gradient_optimizer_niu: float = 1,
                  initial_cmaes_step_size_sigma_g: float = 0.05,
+
                  ):
         self.number_of_bd_dimensions = number_of_bd_dimensions
         self.crystal_system = crystal_system
         self.crystal_evaluator = crystal_evaluator
-        self.graph_converter = CrystalGraphConverter()
         self.step_size_gradient_optimizer_niu = step_size_gradient_optimizer_niu
         self.initial_cmaes_step_size_sigma_g = initial_cmaes_step_size_sigma_g
 
@@ -49,15 +49,6 @@ class CMAMEGALOOP:
             self.num_coefficeints,
             np.inf,
             dtype=np.float64,
-        )
-        self.crystal_evaluator = CrystalEvaluator(
-            compute_gradients=True,
-            comparator=None,
-            constrained_qd=False,
-            force_threshold_fmax=1,
-            with_force_threshold=False,
-            relax_every_n_generations=False,
-            fmax_relaxation_convergence=0.2,
         )
         self.cellbounds = CellBounds(
             bounds={'phi': [20, 160], 'chi': [20, 160], 'psi': [20, 160], 'a': [2, 40], 'b': [2, 40],
@@ -109,8 +100,8 @@ class CMAMEGALOOP:
                       ):
         self.initialise_starting_parameters(number_of_niches,maximum_evaluations, run_parameters, experiment_label)
         print("hello cma")
-        solution_theta = self.crystal_system.create_one_individual(self.configuration_counter)
-        solution_theta = solution_theta.todict()
+        solution_theta = self.crystal_system.create_n_individuals(1)[0]
+        # solution_theta = solution_theta.todict()
         self._grad_opt = _get_grad_opt(
             "gradient_ascent",
             theta0=solution_theta["positions"],
@@ -118,14 +109,20 @@ class CMAMEGALOOP:
         )
         while self.n_evals < maximum_evaluations:
             #3: f, ∇f , m, ∇m ← evaluate(θ)
-            _, population, fitness_scores, descriptors, kill_list, gradients = self.crystal_evaluator.batch_compute_fitness_and_bd(
-                list_of_atoms=[solution_theta],
-                cellbounds=self.crystal_system.cellbounds,
-                really_relax=None,
-                behavioral_descriptor_names=run_parameters["behavioural_descriptors"],
-                n_relaxation_steps=self.n_relaxation_steps
-            )
+            try:
+                _, population, fitness_scores, descriptors, kill_list, gradients = self.crystal_evaluator.batch_compute_fitness_and_bd(
+                    list_of_atoms=[solution_theta],
+                    cellbounds=self.crystal_system.cellbounds,
+                    really_relax=None,
+                    behavioral_descriptor_names=run_parameters["behavioural_descriptors"],
+                    n_relaxation_steps=self.n_relaxation_steps
+                )
+            except ValueError:
+                solution_theta = self.crystal_system.create_n_individuals(1)[0]
+                self._grad_opt.reset(solution_theta["positions"])
+                continue
             solution_theta = population[0]
+            self._grad_opt.reset(solution_theta["positions"])
 
             # 4: ∇f ← normalize(∇f ), ∇m ← normalize(∇m)
             gradient_stack = np.stack([gradients[0][0][:len(solution_theta["positions"])],
@@ -163,42 +160,41 @@ class CMAMEGALOOP:
 
             # 12: end loop
             # 13: rank ∇i by ∆i
-            solution_batch = updated_atoms
-            objective_batch = np.asarray(fitness_scores)
-            measures_batch = np.asarray(descriptors)
-            status_batch = None
-            value_batch = np.asarray(fitness_scores)  # TODO: this needs to be fixed to be better
-            batch_size = len(solution_batch)
-            metadata_batch = np.empty(batch_size, dtype=object)
+            # solution_batch = updated_atoms
+            # objective_batch = np.asarray(fitness_scores)
+            # measures_batch = np.asarray(descriptors)
+            # status_batch = None
+            # value_batch = np.asarray(fitness_scores)  # TODO: this needs to be fixed to be better
+            # batch_size = len(solution_batch)
+            # metadata_batch = np.empty(batch_size, dtype=object)
 
             indices, ranking_values = self._ranker.rank(
-                self, None, self._rng, solution_batch, objective_batch,
-                measures_batch, status_batch, value_batch, metadata_batch)
+                self, archive=None, rng=self._rng, solution_batch=None, objective_batch=None,
+                measures_batch=None, status_batch=None, value_batch=np.asarray(fitness_scores), metadata_batch=None)
 
             # 14: ∇step ← ∑λ i=1 wi∇rank[i]
             num_parents = self.coef_optimizer.batch_size // 2  # todo this can be based on new solutions updated_atoms if self._selection_rule == "filter" else
-
-
             parents = [el.get_positions() for i, el in enumerate(updated_atoms) if i in indices]
             parents = parents[:num_parents]
             weights = (np.log(num_parents + 0.5) -
                        np.log(np.arange(1, num_parents + 1)))
             weights = weights / np.sum(weights)  # Normalize weights
-            new_mean = (parents * weights).sum(axis=2).sum(axis=1)
+            new_mean = (parents * weights).sum(axis=0)
 
             #15: θ ← θ + η∇step
             gradient_step = new_mean - self._grad_opt.theta
             self._grad_opt.step(gradient_step)
-
-            new_positions = solution_theta["positions"] + self.step_size_gradient_optimizer_niu * new_mean
-            solution_theta = solution_theta
+            solution_theta["positions"] = self._grad_opt.theta
+            # new_positions = solution_theta["positions"] + self.step_size_gradient_optimizer_niu * new_mean
+            # solution_theta["positions"] = new_positions #todo: can this be pulled from grad opt theta instead to have everything in one place?
+            # solution_theta = solution_theta
 
             #16: Adapt CMA-ES parameters μ, Σ, p based on improvement ranking ∆i
             self.coef_optimizer.tell(indices, num_parents)
 
             # 17: if there is no change in the archive then
             if (self.coef_optimizer.check_stop(ranking_values[indices]) or
-                    self._check_restart(new_positions)).all():
+                    self._check_restart(self._grad_opt.theta)).all():
                 print("restarting")
                 # 19: Set θ to a randomly selected existing cell θi from the archive
                 solution_theta = self.get_random_individual_from_archive()

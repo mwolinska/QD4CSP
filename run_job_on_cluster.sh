@@ -7,6 +7,8 @@ scp run_experiment.py msw16@shell5.doc.ic.ac.uk:~/csp_experiments/
 scp main.py msw16@shell5.doc.ic.ac.uk:~/csp_experiments/
 scp experiment_from_config.py msw16@shell5.doc.ic.ac.uk:~/csp_experiments/
 scp experiment_from_config_cma.py msw16@shell5.doc.ic.ac.uk:~/csp_experiments/
+scp debugger.py msw16@shell5.doc.ic.ac.uk:~/csp_experiments/
+scp script_job.sh msw16@shell5.doc.ic.ac.uk:~/csp_experiments/
 
 ssh -J msw16@shell5.doc.ic.ac.uk msw16@gpucluster2.doc.ic.ac.uk << EOF
 cd csp_experiments/

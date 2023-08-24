@@ -5,12 +5,11 @@ from ase.ga.utilities import CellBounds
 
 from csp_elites.crystal.materials_data_model import MaterialProperties, StartGenerators
 from csp_elites.dqd.cma_mega_run import main_cma
-# from csp_elites.plot import load_centroids, load_archive_from_pickle
 from csp_elites.utils.experiment_parameters import ExperimentParameters
-from main import main
 
 if __name__ == '__main__':
     file_location = ""
+    print(file_location)
     if file_location == "":
         file_location = sys.argv[1]
     with open(file_location, "r") as file:

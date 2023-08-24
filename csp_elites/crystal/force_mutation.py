@@ -8,7 +8,7 @@ from ase.ga.utilities import atoms_too_close, atoms_too_close_two_sets, closest_
 from chgnet.model import CHGNet, CHGNetCalculator
 from mp_api.client import MPRester
 from pymatgen.io.ase import AseAtomsAdaptor
-from ribs.emitters.opt import CMAEvolutionStrategy, _get_es, _get_grad_opt
+from ribs.emitters.opt import _get_es, _get_grad_opt
 from ribs.emitters.rankers import _get_ranker
 
 from csp_elites.crystal.crystal_evaluator import CrystalEvaluator
@@ -47,6 +47,7 @@ class GradientMutation(OffspringCreator):
     #              verbose=False, rng=np.random):
     def __init__(self, blmin, n_top, learning_rate: float = 0.01, test_dist_to_slab=True, use_tags=False,
                  verbose=False, rng=np.random):
+        print("FAKE GRADIETN MUTATION")
         OffspringCreator.__init__(self, verbose, rng=rng)
         self.blmin = blmin
         self.n_top = n_top
@@ -55,70 +56,117 @@ class GradientMutation(OffspringCreator):
 
         self.descriptor = 'GradientMutation'
         self.min_inputs = 1
-        self.model = CHGNet.load()
         self.learning_rate = learning_rate
 
     def get_new_individual(self, parents):
+        print("THIS MUTATION ISNT WORKING")
         f = parents[0]
+        return f, 'mutation: gradient rattle'
 
-        indi = self.mutate(f)
-        if indi is None:
-            return indi, 'mutation: gradient rattle'
-
-        indi = self.initialize_individual(f, indi)
-        indi.info['data']['parents'] = [f.info['confid']]
-
-        return self.finalize_individual(indi), 'mutation: gradient rattle'
-
-    def mutate(self, atoms):
-        """Does the actual mutation."""
-        prediction = self.model.predict_structure(AseAtomsAdaptor.get_structure(atoms))
-        forces = prediction["f"]
-
-        # N = len(atoms) if self.n_top is None else self.n_top
-        N = len(atoms)
-        slab = atoms[:len(atoms) - N]
-        atoms = atoms[-N:]
-        tags = atoms.get_tags() if self.use_tags else np.arange(N)
-        pos_ref = atoms.get_positions()
-        num = atoms.get_atomic_numbers()
-        cell = atoms.get_cell()
-        pbc = atoms.get_pbc()
-        # st = 2. * self.rattle_strength
-
-        count = 0
-        maxcount = 1000
-        too_close = True
-        while too_close and count < maxcount:
-            count += 1
-            pos = pos_ref.copy()
-            # ok = False
-            # too_close = False
-            pos += self.learning_rate * forces
-            # for tag in np.unique(tags):
-            #     select = np.where(tags == tag)
-            #     # if self.rng.rand() < self.rattle_prop:
-            #     #     ok = True
-            #     #     r = self.rng.rand(3)
-            #     #     pos[select] += st * (r - 0.5)
-            #
-            # if not ok:
-            #     # Nothing got rattled
-            #     continue
-
-            top = Atoms(num, positions=pos, cell=cell, pbc=pbc, tags=tags)
-            too_close = atoms_too_close(
-                top, self.blmin, use_tags=self.use_tags)
-            if not too_close and self.test_dist_to_slab:
-                too_close = atoms_too_close_two_sets(top, slab, self.blmin)
-
-        if count == maxcount:
-            del prediction
-            return None
-
-        del prediction
-        mutant = slab + top
-        return mutant
+# class GradientMutation(OffspringCreator):
+#     """An implementation of the rattle mutation as described in:
+#
+#     R.L. Johnston Dalton Transactions, Vol. 22,
+#     No. 22. (2003), pp. 4193-4207
+#
+#     Parameters:
+#
+#     blmin: Dictionary defining the minimum distance between atoms
+#         after the rattle.
+#
+#     n_top: Number of atoms optimized by the GA.
+#
+#     rattle_strength: Strength with which the atoms are moved.
+#
+#     rattle_prop: The probability with which each atom is rattled.
+#
+#     test_dist_to_slab: whether to also make sure that the distances
+#         between the atoms and the slab satisfy the blmin.
+#
+#     use_tags: if True, the atomic tags will be used to preserve
+#         molecular identity. Same-tag atoms will then be
+#         displaced collectively, so that the internal
+#         geometry is preserved.
+#
+#     rng: Random number generator
+#         By default numpy.random.
+#     """
+#     # def __init__(self, test_dist_to_slab=True, use_tags=False,
+#     #              verbose=False, rng=np.random):
+#     def __init__(self, blmin, n_top, learning_rate: float = 0.01, test_dist_to_slab=True, use_tags=False,
+#                  verbose=False, rng=np.random):
+#         OffspringCreator.__init__(self, verbose, rng=rng)
+#         self.blmin = blmin
+#         self.n_top = n_top
+#         self.test_dist_to_slab = test_dist_to_slab
+#         self.use_tags = use_tags
+#
+#         self.descriptor = 'GradientMutation'
+#         self.min_inputs = 1
+#         self.model = CHGNet.load()
+#         self.learning_rate = learning_rate
+#
+#     def get_new_individual(self, parents):
+#         f = parents[0]
+#
+#         indi = self.mutate(f)
+#         if indi is None:
+#             return indi, 'mutation: gradient rattle'
+#
+#         indi = self.initialize_individual(f, indi)
+#         indi.info['data']['parents'] = [f.info['confid']]
+#
+#         return self.finalize_individual(indi), 'mutation: gradient rattle'
+#
+#     def mutate(self, atoms):
+#         """Does the actual mutation."""
+#         prediction = self.model.predict_structure(AseAtomsAdaptor.get_structure(atoms))
+#         forces = prediction["f"]
+#
+#         # N = len(atoms) if self.n_top is None else self.n_top
+#         N = len(atoms)
+#         slab = atoms[:len(atoms) - N]
+#         atoms = atoms[-N:]
+#         tags = atoms.get_tags() if self.use_tags else np.arange(N)
+#         pos_ref = atoms.get_positions()
+#         num = atoms.get_atomic_numbers()
+#         cell = atoms.get_cell()
+#         pbc = atoms.get_pbc()
+#         # st = 2. * self.rattle_strength
+#
+#         count = 0
+#         maxcount = 1000
+#         too_close = True
+#         while too_close and count < maxcount:
+#             count += 1
+#             pos = pos_ref.copy()
+#             # ok = False
+#             # too_close = False
+#             pos += self.learning_rate * forces
+#             # for tag in np.unique(tags):
+#             #     select = np.where(tags == tag)
+#             #     # if self.rng.rand() < self.rattle_prop:
+#             #     #     ok = True
+#             #     #     r = self.rng.rand(3)
+#             #     #     pos[select] += st * (r - 0.5)
+#             #
+#             # if not ok:
+#             #     # Nothing got rattled
+#             #     continue
+#
+#             top = Atoms(num, positions=pos, cell=cell, pbc=pbc, tags=tags)
+#             too_close = atoms_too_close(
+#                 top, self.blmin, use_tags=self.use_tags)
+#             if not too_close and self.test_dist_to_slab:
+#                 too_close = atoms_too_close_two_sets(top, slab, self.blmin)
+#
+#         if count == maxcount:
+#             del prediction
+#             return None
+#
+#         del prediction
+#         mutant = slab + top
+#         return mutant
 
 
 class DQDMutationCMAMEGA(OffspringCreator):
