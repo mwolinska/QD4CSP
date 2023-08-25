@@ -1,14 +1,17 @@
 import json
 import sys
 
+print("cellbounds")
 from ase.ga.utilities import CellBounds
 
+print("data model")
 from csp_elites.crystal.materials_data_model import MaterialProperties, StartGenerators
+print("main cma")
 from csp_elites.dqd.cma_mega_run import main_cma
 from csp_elites.utils.experiment_parameters import ExperimentParameters
 
 if __name__ == '__main__':
-    file_location = ""
+    file_location = "configs/0822/cma_5_relaxation_lr1_sigma_1.json"
     print(file_location)
     if file_location == "":
         file_location = sys.argv[1]

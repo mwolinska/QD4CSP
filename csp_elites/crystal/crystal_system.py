@@ -113,7 +113,7 @@ class CrystalSystem:
                 individuals.append(new_individual)
             else:
                 print("isolated bluu")
-        print(f"generated {individuals}")
+        # print(f"generated {individuals}")
         return individuals
 
     def _initialise_start_generator(self, start_generator : StartGenerators):

@@ -1,8 +1,13 @@
+print("inside main cma")
 from ase.ga.ofp_comparator import OFPComparator
 
+print("evaluator")
 from csp_elites.crystal.crystal_evaluator import CrystalEvaluator
+print("system")
 from csp_elites.crystal.crystal_system import CrystalSystem
+print("mega loop")
 from csp_elites.dqd.cma_mega_loop import CMAMEGALOOP
+print("exp parameters")
 from csp_elites.map_elites.elites_utils import make_current_time_string
 from csp_elites.utils.experiment_parameters import ExperimentParameters
 
