@@ -8,6 +8,7 @@
 import gc
 import os
 import pickle
+from copy import deepcopy
 
 import numpy as np
 import psutil
@@ -197,9 +198,7 @@ class CVT:
         s_list = self.crystal_evaluator.batch_create_species(
             population, fitness_scores, descriptors, kill_list, gradients
         )
-        evaluations_performed = len(population)
-        self.n_evals += evaluations_performed
-        self.b_evals += evaluations_performed
+
         for s in s_list:
             if s is None:
                 continue
@@ -207,41 +206,40 @@ class CVT:
                 s.x["info"]["confid"] = self.configuration_counter
                 self.configuration_counter += 1
                 add_to_archive(s, s.desc, self.archive, self.kdt)
-        if (
-            self.b_evals >= self.run_parameters["dump_period"]
-            and self.run_parameters["dump_period"] != -1
-        ):
-            print(
-                "[{}/{}]".format(self.n_evals, int(self.maximum_evaluations)),
-                end=" ",
-                flush=True,
-            )
-            save_archive(self.archive, self.n_evals, self.experiment_directory_path)
-            self.b_evals = 0
-        # write log
-        if self.log_file != None:
-            fit_list = np.array([x.fitness for x in self.archive.values()])
-            qd_score = np.sum(fit_list)
-            coverage = 100 * len(fit_list) / self.number_of_niches
+                self.n_evals += 1
+                self.b_evals += 1
+                if (
+                    self.b_evals == self.run_parameters["dump_period"]
+                    and self.run_parameters["dump_period"] != -1
+                ):
+                    save_archive(self.archive, self.n_evals,
+                                 self.experiment_directory_path)
+                    self.b_evals = 0
 
-            self.log_file.write(
-                "{} {} {} {} {} {} {} {} {}\n".format(
-                    self.n_evals,
-                    len(self.archive.keys()),
-                    np.max(fit_list),
-                    np.mean(fit_list),
-                    np.median(fit_list),
-                    np.percentile(fit_list, 5),
-                    np.percentile(fit_list, 95),
-                    coverage,
-                    qd_score,
-                )
-            )
-            self.log_file.flush()
-        memory = psutil.virtual_memory()[3] / 1000000000
-        self.memory_log.write("{} {}\n".format(self.n_evals, memory))
-        self.memory_log.flush()
-        gc.collect()
+                if self.log_file != None:
+                    fit_list = np.array(
+                        [x.fitness for x in self.archive.values()])
+                    qd_score = np.sum(fit_list)
+                    coverage = 100 * len(fit_list) / self.number_of_niches
+
+                    self.log_file.write(
+                        "{} {} {} {} {} {} {} {} {}\n".format(
+                            self.n_evals,
+                            len(self.archive.keys()),
+                            np.max(fit_list),
+                            np.mean(fit_list),
+                            np.median(fit_list),
+                            np.percentile(fit_list, 5),
+                            np.percentile(fit_list, 95),
+                            coverage,
+                            qd_score,
+                        )
+                    )
+                    self.log_file.flush()
+                memory = psutil.virtual_memory()[3] / 1000000000
+                self.memory_log.write("{} {}\n".format(self.n_evals, memory))
+                self.memory_log.flush()
+                gc.collect()
 
     def _initialise_kdt_and_centroids(
         self, experiment_directory_path, number_of_niches, run_parameters
