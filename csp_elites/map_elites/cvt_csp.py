@@ -216,30 +216,30 @@ class CVT:
                                  self.experiment_directory_path)
                     self.b_evals = 0
 
-                if self.log_file != None:
-                    fit_list = np.array(
-                        [x.fitness for x in self.archive.values()])
-                    qd_score = np.sum(fit_list)
-                    coverage = 100 * len(fit_list) / self.number_of_niches
+                    if self.log_file != None:
+                        fit_list = np.array(
+                            [x.fitness for x in self.archive.values()])
+                        qd_score = np.sum(fit_list)
+                        coverage = 100 * len(fit_list) / self.number_of_niches
 
-                    self.log_file.write(
-                        "{} {} {} {} {} {} {} {} {}\n".format(
-                            self.n_evals,
-                            len(self.archive.keys()),
-                            np.max(fit_list),
-                            np.mean(fit_list),
-                            np.median(fit_list),
-                            np.percentile(fit_list, 5),
-                            np.percentile(fit_list, 95),
-                            coverage,
-                            qd_score,
+                        self.log_file.write(
+                            "{} {} {} {} {} {} {} {} {}\n".format(
+                                self.n_evals,
+                                len(self.archive.keys()),
+                                np.max(fit_list),
+                                np.mean(fit_list),
+                                np.median(fit_list),
+                                np.percentile(fit_list, 5),
+                                np.percentile(fit_list, 95),
+                                coverage,
+                                qd_score,
+                            )
                         )
-                    )
-                    self.log_file.flush()
-                memory = psutil.virtual_memory()[3] / 1000000000
-                self.memory_log.write("{} {}\n".format(self.n_evals, memory))
-                self.memory_log.flush()
-                gc.collect()
+                        self.log_file.flush()
+                    memory = psutil.virtual_memory()[3] / 1000000000
+                    self.memory_log.write("{} {}\n".format(self.n_evals, memory))
+                    self.memory_log.flush()
+                    gc.collect()
 
     def _initialise_kdt_and_centroids(
         self, experiment_directory_path, number_of_niches, run_parameters
