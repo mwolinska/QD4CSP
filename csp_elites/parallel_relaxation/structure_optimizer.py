@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import List
 
 import numpy as np
+import torch
 from ase import Atoms
 from chgnet.model import CHGNet
 from chgnet.model.dynamics import TrajectoryObserver
@@ -18,6 +19,8 @@ class BatchedStructureOptimizer:
         self.overriden_optimizer = OverridenFire()
         self.atoms_filter = AtomsFilterForRelaxation()
         self.model = CHGNet.load()
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.model.to(self.device)
         self.batch_size = batch_size
         self.timings = None
         self.reset_timings()
@@ -260,3 +263,10 @@ class BatchedStructureOptimizer:
             forces = [None for el in forces]
 
         return energies[0] * -1, forces[0]
+
+    def is_structure_graph_valid(self, structure: Structure) -> bool:
+        try:
+            self.model.graph_converter(structure, on_isolated_atoms="warn")
+            return True
+        except SystemExit:
+            return False
