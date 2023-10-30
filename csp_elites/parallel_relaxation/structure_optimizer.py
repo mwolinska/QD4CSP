@@ -21,6 +21,7 @@ class BatchedStructureOptimizer:
         self.model = CHGNet.load()
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.model.to(self.device)
+        print(self.device)
         self.batch_size = batch_size
         self.timings = None
         self.reset_timings()
