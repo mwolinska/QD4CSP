@@ -16,3 +16,5 @@ report_figures/
 /bin
 
 /.configs_copy.nosync
+/experiment_configs
+experiments
