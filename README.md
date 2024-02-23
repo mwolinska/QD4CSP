@@ -8,5 +8,5 @@ It was supervised by Dr Antoine Cully, with expert materials science input provi
 Chair of Materials Design at the Department of Materials at Imperial College London. 
 
 ## Deprecation Notice
-This reporistory is deprecated in favour of the implemntation used for the publication resulting from this work.
+This repository is deprecated in favour of the implemntation used for the publication resulting from this work.
 You can access the code [here](https://github.com/adaptive-intelligent-robotics/QD4CSP).
